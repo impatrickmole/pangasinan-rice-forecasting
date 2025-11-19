@@ -8,6 +8,8 @@ library(readxl)
 library(dplyr)
 library(tidyr)
 library(zoo)
+library(ggplot2)
+library(scales)
 
 # --- STEP 1: LOAD THE DATA ---
 # Make sure the file "2E4EVCP0.xlsx" is in your R working directory
@@ -76,3 +78,53 @@ write.csv(final_df, "Pangasinan_Rice_Yield_Clean.csv", row.names = FALSE)
 plot(final_df$Date, final_df$Yield, type = "l", col = "green", 
      main = "Quarterly Rice Yield in Pangasinan", 
      xlab = "Year", ylab = "Yield (MT)")
+
+#Enhance Plot for visualization
+# --- PLOT OPTION 1: Enhanced Trend Line ---
+# This shows the history with clear markers for each quarter
+
+ggplot(final_df, aes(x = Date, y = Yield)) +
+  # Add the line
+  geom_line(color = "#0073C2", size = 1) +
+  # Add points so you can see exactly where each quarter falls
+  geom_point(color = "#0073C2", size = 2) +
+  # Add a smooth trend line (optional - helps see long-term growth)
+  geom_smooth(method = "loess", color = "red", se = FALSE, linetype = "dashed", size = 0.5) +
+  
+  # Fix the X-axis to show every year
+  scale_x_date(date_breaks = "1 year", date_labels = "%Y") +
+  # Fix the Y-axis to use commas (e.g., 200,000 instead of scientific notation)
+  scale_y_continuous(labels = comma) +
+  
+  # Add titles and labels
+  labs(
+    title = "Historical Quarterly Rice Yield in Pangasinan (2008–2025)",
+    subtitle = "Blue line: Actual Yield | Red dashed line: Long-term Trend",
+    x = "Year",
+    y = "Yield (Metric Tons)",
+    caption = "Source: Provincial Agriculture Office Data"
+  ) +
+  
+  # Use a clean, professional theme
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1), # Rotate years for readability
+    plot.title = element_text(face = "bold", size = 14)
+  )
+
+
+# --- PLOT OPTION 2: Seasonal Pattern Plot ---
+# This is VERY important for your study. It proves why you need SARIMA.
+# It shows the distribution of yield for each Quarter specifically.
+
+ggplot(final_df, aes(x = factor(Quarter), y = Yield, fill = factor(Quarter))) +
+  geom_boxplot() +
+  scale_y_continuous(labels = comma) +
+  labs(
+    title = "Seasonal Distribution of Rice Yield by Quarter",
+    subtitle = "Demonstrating strong seasonality: Q4 consistently has the highest yield",
+    x = "Quarter",
+    y = "Yield (Metric Tons)",
+    fill = "Quarter"
+  ) +
+  theme_bw()
